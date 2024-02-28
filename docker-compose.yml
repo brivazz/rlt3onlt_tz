@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:${MONGO_VERSION}
+    container_name: mongo
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    ports:
+      - ${MONGO_PORT}:${MONGO_PORT}
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongodb:${MONGO_PORT}/test --quiet
+      interval: 2s
+      timeout: 5s
+      retries: 120
+
+  mongo-express:
+    image: mongo-express:${MONGO_EXPRESS_VERSION}
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - ${MONGO_EXPRESS_PORT}:${MONGO_EXPRESS_PORT}
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: ${MONGO_PORT}
+    depends_on:
+      mongo:
+        condition: service_started
